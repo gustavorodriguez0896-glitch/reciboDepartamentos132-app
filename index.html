@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recibos Agua y Luz</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#1570ef" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Recibos" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f4f6f8;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    h2 { margin-top: 0; font-size: 17px; }
+    h3 { margin-top: 0; }
+
+    .section {
+      margin-bottom: 20px;
+      padding: 14px;
+      border: 1px solid #e2e6ea;
+      border-radius: 10px;
+      background: #fafbfc;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cfd6dd;
+      border-radius: 8px;
+      font-size: 15px; /* más grande para móvil */
+    }
+
+    input[readonly] {
+      background: #eef3f7;
+      color: #444;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #667;
+      margin-top: 3px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 13px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .btn-primary { background: #1570ef; color: white; font-weight: bold; }
+    .btn-secondary { background: #e5e7eb; color: #222; }
+
+    .totals-box {
+      background: #f0f7ff;
+      border: 1px solid #cfe3ff;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .totals-box .line {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #dde8f5;
+      font-size: 15px;
+    }
+
+    .totals-box .line:last-child { border-bottom: none; }
+
+    .totals-box .grand-total {
+      font-size: 20px;
+      font-weight: bold;
+      color: #0f3d75;
+    }
+
+    .receipt {
+      margin-top: 24px;
+      display: none;
+      border: 2px solid #d7dee7;
+      border-radius: 12px;
+      padding: 20px;
+      background: white;
+    }
+
+    .receipt-header { text-align: center; margin-bottom: 18px; }
+    .receipt-title { font-size: 20px; font-weight: bold; }
+    .receipt-subtitle { font-size: 13px; color: #666; margin-top: 4px; }
+
+    .receipt-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .receipt-section { margin-top: 18px; }
+
+    .receipt-section h3 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+
+    .receipt-total {
+      font-weight: bold;
+      font-size: 17px;
+      margin-top: 8px;
+    }
+
+    .medidor-box {
+      margin-top: 14px;
+      border: 2px dashed #b9c3cf;
+      border-radius: 10px;
+      min-height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7a8794;
+      text-align: center;
+      padding: 10px;
+      background: #fcfdff;
+      overflow: hidden;
+    }
+
+    .medidor-box img {
+      max-width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .notes { margin-top: 16px; font-size: 13px; color: #555; }
+
+    /* Banner de instalación */
+    #install-banner {
+      display: none;
+      background: #1570ef;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    #install-banner p { margin: 0; font-size: 14px; }
+
+    #install-banner button {
+      background: white;
+      color: #1570ef;
+      font-weight: bold;
+      padding: 8px 14px;
+      font-size: 13px;
+      flex: none;
+      min-width: auto;
+    }
+
+    #install-banner .close-btn {
+      background: transparent;
+      color: white;
+      font-size: 20px;
+      padding: 4px 8px;
+      flex: none;
+      min-width: auto;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container > :not(.receipt) { display: none !important; }
+      .receipt { display: block !important; margin-top: 0; border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Banner de instalación -->
+    <div id="install-banner" style="display:none;">
+      <p>📲 Instala esta app en tu celular para usarla sin internet</p>
+      <button onclick="instalarApp()">Instalar</button>
+      <button class="close-btn" onclick="cerrarBanner()">✕</button>
+    </div>
+
+    <h1>💧⚡ Recibos de Agua y Luz</h1>
+
+    <div class="section">
+      <h2>Datos generales</h2>
+      <div class="grid">
+        <div>
+          <label for="departamento">Departamento</label>
+          <input type="number" id="departamento" placeholder="1" pattern="[0-9]*" min="1"/>
+        </div>
+        <div>
+          <label for="periodo">Periodo</label>
+          <select id="periodo">
+            <option value="">Selecciona un bimestre</option>
+            <option>Enero - Febrero</option>
+            <option>Marzo - Abril</option>
+            <option>Mayo - Junio</option>
+            <option>Julio - Agosto</option>
+            <option>Septiembre - Octubre</option>
+            <option>Noviembre - Diciembre</option>
+          </select>
+        </div>
+        <div>
+          <label for="anio">Año</label>
+          <input type="number" id="anio" min="1" placeholder="Ej. 2026"/>
+        </div>
+        <div>
+          <label for="numDepartamentos">Número de departamentos</label>
+          <input type="number" id="numDepartamentos" min="1" value="3" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>💧 Agua</h2>
+      <div class="grid">
+        <div>
+          <label for="totalAguaLitros">Total de agua del recibo (L)</label>
+          <input type="number" id="totalAguaLitros" inputmode="decimal" min="1" step="0.01" placeholder="Ej. 13570"/>
+        </div>
+        <div>
+          <label for="consumoDepartamento">Consumo del departamento (L)</label>
+          <input type="number" id="consumoDepartamento" inputmode="decimal" min="1" step="0.01" placeholder="Ej. 4500"/>
+        </div>
+        <div>
+          <label for="porcentajeAgua">Porcentaje de consumo (%)</label>
+          <input type="text" id="porcentajeAgua" readonly />
+          <div class="hint">Consumo depto ÷ total × 100</div>
+        </div>
+        <div>
+          <label for="totalReciboAgua">Total del recibo de agua ($)</label>
+          <input type="number" id="totalReciboAgua" inputmode="decimal" min="1" step="0.01" placeholder="Ej. 134"/>
+        </div>
+        <div>
+          <label for="importeAgua">Importe proporcional ($)</label>
+          <input type="text" id="importeAgua" readonly />
+          <div class="hint">Total agua × % consumo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>⚡ Luz de la bomba</h2>
+      <div class="grid">
+        <div>
+          <label for="totalReciboLuz">Total del recibo de luz ($)</label>
+          <input type="number" id="totalReciboLuz" inputmode="decimal" min="1" step="0.01" placeholder="Ej. 206" />
+        </div>
+        <div>
+          <label for="mitadLuz">50% del recibo de luz ($)</label>
+          <input type="text" id="mitadLuz" readonly />
+          <div class="hint">Corresponde a la mitad del recibo</div>
+        </div>
+        <div>
+          <label for="parteFijaDepto">Parte fija por departamento ($)</label>
+          <input type="text" id="parteFijaDepto" readonly />
+          <div class="hint">Mitad del recibo ÷ departamentos</div>
+        </div>
+        <div>
+          <label for="parteVariableDepto">Parte variable del departamento ($)</label>
+          <input type="text" id="parteVariableDepto" readonly />
+          <div class="hint">Se calcula con el porcentaje del agua</div>
+        </div>
+        <div>
+          <label for="totalLuzDepto">Total de luz del departamento ($)</label>
+          <input type="text" id="totalLuzDepto" readonly />
+          <div class="hint">Parte fija + parte variable</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🧾 Total a pagar</h2>
+      <div class="totals-box">
+        <div class="line">
+          <span>Importe de agua</span>
+          <strong id="resumenAgua">$0.00</strong>
+        </div>
+        <div class="line">
+          <span>Total de luz</span>
+          <strong id="resumenLuz">$0.00</strong>
+        </div>
+        <div class="line grand-total">
+          <span>Total final</span>
+          <strong id="resumenTotal">$0.00</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📸 Fotografía del medidor</h2>
+      <div class="grid">
+        <div>
+          <label for="fotoMedidor">Seleccionar imagen</label>
+          <input type="file" id="fotoMedidor" accept="image/*" capture="environment" />
+          <div class="hint">Opcional. Puedes tomar foto directamente con la cámara.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn-primary" onclick="generarRecibo()">Generar recibo</button>
+      <button class="btn-secondary" onclick="window.print()">Imprimir / PDF</button>
+      <button class="btn-secondary" onclick="limpiarFormulario()">Limpiar</button>
+    </div>
+
+    <div class="receipt" id="reciboFinal"></div>
+  </div>
+
+  <script>
+  const anioActual = new Date().getFullYear();
+  const input = document.getElementById("anio");
+
+  input.value = anioActual;
+  input.max = anioActual;
+  
+    // ── Registro del Service Worker ──────────────────────────────
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('SW registrado ✓'))
+          .catch(err => console.log('SW error:', err));
+      });
+    }
+
+    // ── Banner de instalación ────────────────────────────────────
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').style.display = 'flex';
+    });
+
+    function instalarApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          cerrarBanner();
+        });
+      }
+    }
+
+    function cerrarBanner() {
+      document.getElementById('install-banner').style.display = 'none';
+    }
+
+    // ── Referencias a inputs ─────────────────────────────────────
+    const totalAguaLitros      = document.getElementById("totalAguaLitros");
+    const consumoDepartamento  = document.getElementById("consumoDepartamento");
+    const totalReciboAgua      = document.getElementById("totalReciboAgua");
+    const totalReciboLuz       = document.getElementById("totalReciboLuz");
+    const porcentajeAgua       = document.getElementById("porcentajeAgua");
+    const importeAgua          = document.getElementById("importeAgua");
+    const mitadLuz             = document.getElementById("mitadLuz");
+    const parteFijaDepto       = document.getElementById("parteFijaDepto");
+    const parteVariableDepto   = document.getElementById("parteVariableDepto");
+    const totalLuzDepto        = document.getElementById("totalLuzDepto");
+    const resumenAgua          = document.getElementById("resumenAgua");
+    const resumenLuz           = document.getElementById("resumenLuz");
+    const resumenTotal         = document.getElementById("resumenTotal");
+
+    let fotoMedidorBase64 = "";
+
+    function numero(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+    function dinero(v)  { return "$" + numero(v).toFixed(2); }
+    function porcentaje(v) { return numero(v).toFixed(2) + "%"; }
+
+    function recalcular() {
+      const totalAgua  = numero(totalAguaLitros.value);
+      const consumo    = numero(consumoDepartamento.value);
+      const reciboAgua = numero(totalReciboAgua.value);
+      const reciboLuz  = numero(totalReciboLuz.value);
+      const numDeptos  = numero(document.getElementById("numDepartamentos").value) || 1;
+
+      let pct = totalAgua > 0 ? (consumo / totalAgua) * 100 : 0;
+
+      const aguaDepto      = (reciboAgua * pct) / 100;
+      const mitad          = reciboLuz / 2;
+      const fijoDepto      = mitad / numDeptos;
+      const variableDepto  = (mitad * pct) / 100;
+      const luzDepto       = fijoDepto + variableDepto;
+      const totalFinal     = aguaDepto + luzDepto;
+
+      porcentajeAgua.value    = porcentaje(pct);
+      importeAgua.value       = numero(aguaDepto).toFixed(2);
+      mitadLuz.value          = numero(mitad).toFixed(2);
+      parteFijaDepto.value    = numero(fijoDepto).toFixed(2);
+      parteVariableDepto.value = numero(variableDepto).toFixed(2);
+      totalLuzDepto.value     = numero(luzDepto).toFixed(2);
+
+      resumenAgua.textContent  = dinero(aguaDepto);
+      resumenLuz.textContent   = dinero(luzDepto);
+      resumenTotal.textContent = dinero(totalFinal);
+    }
+
+    [totalAguaLitros, consumoDepartamento, totalReciboAgua, totalReciboLuz,
+     document.getElementById("numDepartamentos")].forEach(el => {
+      el.addEventListener("input", recalcular);
+    });
+
+    document.getElementById("fotoMedidor").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) { fotoMedidorBase64 = ""; return; }
+      const reader = new FileReader();
+      reader.onload = (ev) => { fotoMedidorBase64 = ev.target.result; };
+      reader.readAsDataURL(file);
+    });
+
+    function generarRecibo() {
+      recalcular();
+
+      const departamento = document.getElementById("departamento").value.trim();
+      const periodo      = document.getElementById("periodo").value.trim();
+      const anio         = document.getElementById("anio").value.trim();
+      const numDeptos    = numero(document.getElementById("numDepartamentos").value) || 1;
+
+      const totalAgua    = numero(totalAguaLitros.value);
+      const consumo      = numero(consumoDepartamento.value);
+      const pct          = porcentajeAgua.value;
+      const reciboAgua   = numero(totalReciboAgua.value);
+      const aguaDepto    = numero(importeAgua.value);
+      const reciboLuz    = numero(totalReciboLuz.value);
+      const mitad        = numero(mitadLuz.value);
+      const fijoDepto    = numero(parteFijaDepto.value);
+      const variableDepto = numero(parteVariableDepto.value);
+      const luzDepto     = numero(totalLuzDepto.value);
+      const totalFinal   = aguaDepto + luzDepto;
+
+      const bloqueFoto = fotoMedidorBase64
+        ? `<div class="medidor-box"><img src="${fotoMedidorBase64}" alt="Fotografía del medidor"></div>`
+        : `<div class="medidor-box">Espacio para fotografía del medidor</div>`;
+
+      const html = `
+        <div class="receipt-header">
+          <div class="receipt-title">RECIBO DE AGUA Y ENERGÍA ELÉCTRICA</div>
+          <div class="receipt-subtitle">Sistema de bomba compartida</div>
+        </div>
+        <div class="receipt-info">
+          <div><strong>Departamento:</strong> ${departamento || "-"}</div>
+          <div><strong>Periodo:</strong> ${periodo || "-"} ${anio || ""}</div>
+          <div><strong>No. departamentos:</strong> ${numDeptos}</div>
+        </div>
+        <div class="receipt-section">
+          <h3>💧 Consumo de Agua</h3>
+          <div class="receipt-row"><span>Total del inmueble (Recibo):</span><span>${totalAgua.toFixed(2)} L</span></div>
+          <div class="receipt-row"><span>Consumo del departamento:</span><span>${consumo.toFixed(2)} L</span></div>
+          <div class="receipt-row"><span>Porcentaje de consumo:</span><span>${pct}</span></div>
+          <div class="receipt-row"><span>Costo total del agua:</span><span>${dinero(reciboAgua)}</span></div>
+          <div class="receipt-row"><span><strong>Importe proporcional:</strong></span><strong>${dinero(aguaDepto)}</strong></div>
+          ${bloqueFoto}
+        </div>
+        <div class="receipt-section">
+          <h3>⚡ Energía Eléctrica de la Bomba</h3>
+          <div class="receipt-row"><span>Total del recibo de luz:</span><span>${dinero(reciboLuz)}</span></div>
+          <div class="receipt-row"><span>50% fijo ÷ ${numDeptos} deptos:</span><span>${dinero(fijoDepto)}</span></div>
+          <div class="receipt-row"><span>50% variable (${pct}):</span><span>${dinero(variableDepto)}</span></div>
+          <div class="receipt-row"><span><strong>Importe total de luz:</strong></span><strong>${dinero(luzDepto)}</strong></div>
+        </div>
+        <div class="receipt-section">
+          <h3>🧾 Total a Pagar</h3>
+          <div class="receipt-row"><span>AGUA:</span><span>${dinero(aguaDepto)}</span></div>
+          <div class="receipt-row"><span>LUZ:</span><span>${dinero(luzDepto)}</span></div>
+          <div class="receipt-row receipt-total"><span>TOTAL FINAL:</span><strong>${dinero(totalFinal)}</strong></div>
+        </div>
+        <div class="notes">
+          <p><strong>Notas:</strong></p>
+          <p>1. El agua se cobra proporcional al consumo registrado.</p>
+          <p>2. La luz se divide en 50% fijo (uso común) y 50% variable según consumo.</p>
+          <p>3. El porcentaje utilizado es el mismo del consumo de agua.</p>
+        </div>
+      `;
+
+      const reciboFinal = document.getElementById("reciboFinal");
+      reciboFinal.innerHTML = html;
+      reciboFinal.style.display = "block";
+      reciboFinal.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function limpiarFormulario() {
+      ["departamento","anio","totalAguaLitros","consumoDepartamento",
+       "totalReciboAgua","totalReciboLuz","fotoMedidor"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("periodo").value = "";
+      document.getElementById("numDepartamentos").value = "3";
+      fotoMedidorBase64 = "";
+      ["porcentajeAgua","importeAgua","mitadLuz","parteFijaDepto",
+       "parteVariableDepto","totalLuzDepto"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      resumenAgua.textContent = "$0.00";
+      resumenLuz.textContent  = "$0.00";
+      resumenTotal.textContent = "$0.00";
+      const r = document.getElementById("reciboFinal");
+      r.style.display = "none";
+      r.innerHTML = "";
+    }
+
+    recalcular();
+  </script>
+</body>
+</html>
